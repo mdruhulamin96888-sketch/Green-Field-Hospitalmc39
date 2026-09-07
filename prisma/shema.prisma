@@ -1,0 +1,100 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Patient {
+  id          String   @id @default(cuid())
+  patientId   String   @unique
+  firstName   String
+  lastName    String
+  email       String?
+  phone       String?
+  dateOfBirth DateTime?
+  gender      String?
+  address     String?
+  bloodGroup  String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  appointments Appointment[]
+  bills        Bill[]
+
+  @@map("patients")
+}
+
+model Doctor {
+  id             String   @id @default(cuid())
+  doctorId       String   @unique
+  name           String
+  email          String?  @unique
+  phone          String?
+  specialization String?
+  department     String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  appointments Appointment[]
+
+  @@map("doctors")
+}
+
+model Appointment {
+  id            String   @id @default(cuid())
+  appointmentId String   @unique
+
+  patientId String
+  doctorId  String
+
+  date   DateTime
+  time   String
+  status String   @default("Pending")
+  reason String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  patient Patient @relation(
+    fields: [patientId],
+    references: [id],
+    onDelete: Cascade
+  )
+
+  doctor Doctor @relation(
+    fields: [doctorId],
+    references: [id],
+    onDelete: Cascade
+  )
+
+  @@index([patientId])
+  @@index([doctorId])
+  @@index([date])
+  @@map("appointments")
+}
+
+model Bill {
+  id            String   @id @default(cuid())
+  billId        String   @unique
+  patientId     String
+
+  description   String?
+  amount        Float
+  status        String   @default("Pending")
+  paymentMethod String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  patient Patient @relation(
+    fields: [patientId],
+    references: [id],
+    onDelete: Cascade
+  )
+
+  @@index([patientId])
+  @@map("bills")
+}
